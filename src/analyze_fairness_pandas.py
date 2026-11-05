@@ -1,6 +1,7 @@
 """pandas 版本：uv run python src/analyze_fairness_pandas.py。
 
 对二元变量求均值即得到取值为 1 的概率，容差为 5 个百分点。
+计算 Independence、Sufficiency 和 Separation。
 """
 
 from fractions import Fraction
@@ -52,6 +53,17 @@ def status(passed):
     return "UNDEFINED" if passed is None else "PASS" if passed else "FAIL"
 
 
+def compare_separation(data, attribute):
+    """按真实结果 Y 分组，分别比较 TPR 和 FPR，两项均需通过。"""
+    results = []
+    for outcome, name in ((1, "TPR"), (0, "FPR")):
+        print(f"  Separation ({name}): P(R=1 | Y={outcome}, A)")
+        subset = data.loc[data["y"] == outcome]
+        # 已限定 Y，再复用 P(R=1 | A) 的分组统计。
+        results.append(compare_groups(subset, attribute))
+    return False if False in results else None if None in results else True
+
+
 def main():
     data = load_data(DATA_PATH)
     print(f"Data: {DATA_PATH}\nRows: {len(data)}")
@@ -61,6 +73,7 @@ def main():
         print(f"\n{attribute.upper()} ({label})")
         print("  Independence: P(R=1 | A)")
         independence = compare_groups(data, attribute)
+        separation = compare_separation(data, attribute)
         conditional = []
         for decision in (0, 1):
             print(f"  Sufficiency: P(Y=1 | R={decision}, A)")
@@ -68,11 +81,12 @@ def main():
         # Sufficiency 要求 R=0 和 R=1 两种条件都通过。
         sufficiency = (False if False in conditional else
                        None if None in conditional else True)
-        results.append((attribute.upper(), independence, sufficiency))
+        results.append((attribute.upper(), independence, sufficiency, separation))
     print("\nSummary")
-    print(f"{'Attribute':<12}{'Independence':<16}Sufficiency")
-    for attribute, independence, sufficiency in results:
-        print(f"{attribute:<12}{status(independence):<16}{status(sufficiency)}")
+    print(f"{'Attribute':<12}{'Independence':<16}{'Separation':<16}Sufficiency")
+    for attribute, independence, sufficiency, separation in results:
+        print(f"{attribute:<12}{status(independence):<16}"
+              f"{status(separation):<16}{status(sufficiency)}")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""计算 Independence 和 Sufficiency；仅使用 Python 标准库。
+"""计算 Independence、Sufficiency 和 Separation；仅使用 Python 标准库。
 
 运行：uv run python src/analyze_fairness.py
 容差为两组概率的绝对差 0.05，即 5 个百分点。
@@ -69,6 +69,17 @@ def status(passed):
     return "UNDEFINED" if passed is None else "PASS" if passed else "FAIL"
 
 
+def compare_separation(rows, attribute):
+    """按真实结果 Y 分组，分别比较 TPR 和 FPR，两项均需通过。"""
+    results = []
+    for outcome, name in ((1, "TPR"), (0, "FPR")):
+        print(f"  Separation ({name}): P(R=1 | Y={outcome}, A)")
+        subset = [row for row in rows if row["y"] == outcome]
+        # 已限定 Y，再复用 P(R=1 | A) 的计数逻辑。
+        results.append(compare_groups(subset, attribute))
+    return False if False in results else None if None in results else True
+
+
 def main():
     rows = load_data(DATA_PATH)
     print(f"Data: {DATA_PATH}\nRows: {len(rows)}")
@@ -79,6 +90,7 @@ def main():
         # Independence: R 与 A 独立。R 是二元变量，只需比较 R=1。
         print("  Independence: P(R=1 | A)")
         independence = compare_groups(rows, attribute)
+        separation = compare_separation(rows, attribute)
 
         # Sufficiency: 给定 R 后 Y 与 A 独立，R=0 和 R=1 均需通过。
         conditional_results = []
@@ -90,12 +102,13 @@ def main():
             else None if None in conditional_results
             else True
         )
-        results.append((attribute.upper(), independence, sufficiency))
+        results.append((attribute.upper(), independence, sufficiency, separation))
 
     print("\nSummary")
-    print(f"{'Attribute':<12}{'Independence':<16}Sufficiency")
-    for attribute, independence, sufficiency in results:
-        print(f"{attribute:<12}{status(independence):<16}{status(sufficiency)}")
+    print(f"{'Attribute':<12}{'Independence':<16}{'Separation':<16}Sufficiency")
+    for attribute, independence, sufficiency, separation in results:
+        print(f"{attribute:<12}{status(independence):<16}"
+              f"{status(separation):<16}{status(sufficiency)}")
 
 
 if __name__ == "__main__":

@@ -61,8 +61,8 @@ METRICS = {
 }
 DEFINITIONS = {
     "Independence": ["selection_rate"],
-    "Sufficiency": ["P(Y=1|R=0)", "P(Y=1|R=1)"],
     "Separation": ["TPR", "FPR"],
+    "Sufficiency": ["P(Y=1|R=0)", "P(Y=1|R=1)"],
 }
 
 

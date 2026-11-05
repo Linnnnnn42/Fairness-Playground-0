@@ -1,0 +1,22 @@
+[project]
+name = "fairness-playground-0"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Linnnnnn", email = "Rev0lve@outlook.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fairlearn>=0.15.0",
+    "matplotlib>=3.11.2",
+    "pandas>=3.1.0",
+    "scikit-learn>=1.9.1",
+]
+
+[project.scripts]
+fairness-playground-0 = "fairness_playground_0:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
